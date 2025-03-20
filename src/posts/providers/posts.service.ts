@@ -32,12 +32,12 @@ export class PostsService {
    */
   public async create(@Body() createPostDto: CreatePostDto) {
     // Create the metaOptions first if they exist
-    const metaOptions = createPostDto.metaOptions
-      ? this.metaOptionRepository.create(createPostDto.metaOptions)
-      : null;
-    if (metaOptions) {
-      await this.metaOptionRepository.save(metaOptions);
-    }
+    // const metaOptions = createPostDto.metaOptions
+    //   ? this.metaOptionRepository.create(createPostDto.metaOptions)
+    //   : null;
+    // if (metaOptions) {
+    //   await this.metaOptionRepository.save(metaOptions);
+    // }
     // Create Post
 
     const post = this.postRepository.create({
@@ -49,12 +49,13 @@ export class PostsService {
       schema: createPostDto.schema,
       featuredImageUrl: createPostDto.featuredImageUrl,
       publishOn: createPostDto.publishOn,
+      // metaOptions: createPostDto.metaOptions,
     });
 
     // Add metaOptions to the post
-    if (metaOptions) {
-      post.metaOptions = metaOptions;
-    }
+    // if (metaOptions) {
+    //   post.metaOptions = metaOptions;
+    // }
     // Return the post
     return await this.postRepository.save(post);
   }
