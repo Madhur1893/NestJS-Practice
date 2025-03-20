@@ -7,8 +7,6 @@ import {
   Query,
   Body,
   ParseIntPipe,
-  Headers,
-  Ip,
   DefaultValuePipe,
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
