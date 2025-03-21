@@ -31,15 +31,7 @@ export class PostsService {
    * Creating new post
    */
   public async create(@Body() createPostDto: CreatePostDto) {
-    // Create the metaOptions first if they exist
-    // const metaOptions = createPostDto.metaOptions
-    //   ? this.metaOptionRepository.create(createPostDto.metaOptions)
-    //   : null;
-    // if (metaOptions) {
-    //   await this.metaOptionRepository.save(metaOptions);
-    // }
     // Create Post
-
     const post = this.postRepository.create({
       title: createPostDto.title,
       postType: createPostDto.postType,
@@ -49,32 +41,37 @@ export class PostsService {
       schema: createPostDto.schema,
       featuredImageUrl: createPostDto.featuredImageUrl,
       publishOn: createPostDto.publishOn,
-      // metaOptions: createPostDto.metaOptions,
     });
 
-    // Add metaOptions to the post
-    // if (metaOptions) {
-    //   post.metaOptions = metaOptions;
-    // }
     // Return the post
     return await this.postRepository.save(post);
   }
 
-  public findAll(userId: string) {
+  public async findAll(userId: string) {
     //Find A User
     const user = this.userService.findOneById(userId);
 
-    return [
-      {
-        user: user,
-        title: 'Test File',
-        content: 'Test Content',
+    const posts = await this.postRepository.find({
+      relations: {
+        metaOptions: true,
       },
-      {
-        user: user,
-        title: 'Test File 2',
-        content: 'Test Content 2',
-      },
-    ];
+    });
+    return posts;
+  }
+
+  public async delete(id: number) {
+    //Find the post
+    const post = await this.postRepository.findOneBy({ id });
+
+    //Delete the post
+    await this.postRepository.delete(id);
+
+    if (post?.metaOptions) {
+      //Delete the meta options
+      await this.metaOptionRepository.delete(post.metaOptions.id);
+    }
+
+    //confirmation
+    return { deleted: true, id };
   }
 }
