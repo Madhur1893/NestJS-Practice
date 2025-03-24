@@ -41,6 +41,7 @@ export class PostsService {
       schema: createPostDto.schema,
       featuredImageUrl: createPostDto.featuredImageUrl,
       publishOn: createPostDto.publishOn,
+      metaOptions: createPostDto.metaOptions || undefined,
     });
 
     // Return the post
@@ -61,15 +62,23 @@ export class PostsService {
 
   public async delete(id: number) {
     //Find the post
-    const post = await this.postRepository.findOneBy({ id });
+    // const post = await this.postRepository.findOneBy({ id });
 
     //Delete the post
     await this.postRepository.delete(id);
 
-    if (post?.metaOptions) {
-      //Delete the meta options
-      await this.metaOptionRepository.delete(post.metaOptions.id);
-    }
+    // if (post?.metaOptions) {
+    //   //Delete the meta options
+    //   // await this.metaOptionRepository.delete(post.metaOptions.id);
+
+    //   const inversePost = await this.metaOptionRepository.find({
+    //     where: { id: post?.metaOptions.id },
+    //     relations: {
+    //       post: true,
+    //     },
+    //   });
+    //   console.log(inversePost);
+    // }
 
     //confirmation
     return { deleted: true, id };
