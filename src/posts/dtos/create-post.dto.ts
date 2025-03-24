@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsEnum,
+  IsInt,
   IsISO8601,
   IsJSON,
   IsNotEmpty,
@@ -89,7 +90,7 @@ export class CreatePostDto {
   tags?: string[];
 
   @ApiPropertyOptional({
-    // type: 'object',
+    // type: 'obect',
     required: false,
     items: {
       type: 'object',
@@ -106,4 +107,13 @@ export class CreatePostDto {
   @ValidateNested({ each: true })
   @Type(() => CreatePostMetaOptionsDto)
   metaOptions?: CreatePostMetaOptionsDto | null;
+
+  @ApiProperty({
+    type: 'integer',
+    required: true,
+    example: 1,
+  })
+  @IsNotEmpty()
+  @IsInt()
+  authorId: number;
 }

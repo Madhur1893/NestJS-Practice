@@ -31,6 +31,10 @@ export class PostsService {
    * Creating new post
    */
   public async create(@Body() createPostDto: CreatePostDto) {
+    //Find author from database based on authorId
+
+    const author = await this.userService.findOneById(createPostDto.authorId);
+
     // Create Post
     const post = this.postRepository.create({
       title: createPostDto.title,
@@ -42,6 +46,7 @@ export class PostsService {
       featuredImageUrl: createPostDto.featuredImageUrl,
       publishOn: createPostDto.publishOn,
       metaOptions: createPostDto.metaOptions || undefined,
+      author: author || undefined,
     });
 
     // Return the post
@@ -50,11 +55,12 @@ export class PostsService {
 
   public async findAll(userId: string) {
     //Find A User
-    const user = this.userService.findOneById(userId);
+    // const user = this.userService.findOneById(userId);
 
     const posts = await this.postRepository.find({
       relations: {
         metaOptions: true,
+        // author: true,
       },
     });
     return posts;
