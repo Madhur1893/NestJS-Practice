@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 import { Post } from '../post.entity';
 import { MetaOption } from 'src/meta-options/meta-option.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { TagsService } from 'src/tags/providers/tags.service';
+import { PatchPostDto } from '../dtos/patch-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -25,6 +27,11 @@ export class PostsService {
      */
     @InjectRepository(MetaOption)
     private readonly metaOptionRepository: Repository<MetaOption>,
+
+    /**
+     * Injecting tags Service
+     */
+    private readonly tagsService: TagsService,
   ) {}
 
   /**
@@ -34,6 +41,10 @@ export class PostsService {
     //Find author from database based on authorId
 
     const author = await this.userService.findOneById(createPostDto.authorId);
+
+    const tags = await this.tagsService.findMultipleTags(
+      createPostDto.tags ?? [],
+    );
 
     // Create Post
     const post = this.postRepository.create({
@@ -47,10 +58,41 @@ export class PostsService {
       publishOn: createPostDto.publishOn,
       metaOptions: createPostDto.metaOptions || undefined,
       author: author || undefined,
+      tags: tags,
     });
 
     // Return the post
     return await this.postRepository.save(post);
+  }
+
+  public async update(@Body() patchPostdto: PatchPostDto) {
+    //Find the tag
+    const tags = await this.tagsService.findMultipleTags(
+      patchPostdto.tags ?? [],
+    );
+
+    //Find the post
+    const post = await this.postRepository.findOneBy({
+      id: patchPostdto.id,
+    });
+
+    //Update the properties
+    if (post) {
+      post.title = patchPostdto.title ?? post?.title;
+      post.content = patchPostdto.content ?? post.content;
+      post.status = patchPostdto.status ?? post.status;
+      post.postType = patchPostdto.postType ?? post.postType;
+      post.slug = patchPostdto.slug ?? post.slug;
+      post.featuredImageUrl =
+        patchPostdto.featuredImageUrl ?? post.featuredImageUrl;
+      post.publishOn = patchPostdto.publishOn ?? post.publishOn;
+
+      //Assign the new tags
+      post.tags = tags;
+    }
+
+    //Save the post and return
+    if (post) return await this.postRepository.save(post);
   }
 
   public async findAll(userId: string) {
@@ -61,6 +103,7 @@ export class PostsService {
       relations: {
         metaOptions: true,
         // author: true,
+        // tags: true,
       },
     });
     return posts;
