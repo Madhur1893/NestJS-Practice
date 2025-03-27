@@ -1,10 +1,19 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  RequestTimeoutException,
+} from '@nestjs/common';
 import { GetUsersParamDto } from '../dtos/get-users-param.dto';
 import { AuthService } from 'src/auth/providers/auth.service';
 import { Repository } from 'typeorm';
 import { User } from '../user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from '../dtos/create-user.dto';
+import { error } from 'console';
 
 /**
  *  Class to connect to users table and perform buisness operation
@@ -22,15 +31,42 @@ export class UserService {
   ) {}
 
   public async createUser(createUserDto: CreateUserDto) {
-    //Check if user exist with same email
-    const existingUser = await this.userRepository.findOne({
-      where: { email: createUserDto.email },
-    });
+    let existingUser = null as User | null;
+
+    try {
+      //Check if user exist with same email
+
+      existingUser = await this.userRepository.findOne({
+        where: { email: createUserDto.email },
+      });
+      console.log('existingUser', existingUser);
+    } catch (error) {
+      //Might save the details of exception
+      // Information which is sensitive
+      throw new RequestTimeoutException(
+        'Unable to process your request at the moment please try again',
+        { description: 'Error connencting to the database' },
+      );
+    }
 
     //Handling exception
+
+    if (existingUser) {
+      throw new BadRequestException(
+        'The user already exist, please check you email',
+      );
+    }
     //create a new user
     let newUser = this.userRepository.create(createUserDto);
-    newUser = await this.userRepository.save(newUser);
+
+    try {
+      newUser = await this.userRepository.save(newUser);
+    } catch (error) {
+      throw new RequestTimeoutException(
+        'Unable to process your request at the moment please try again',
+        { description: 'Error connencting to the database' },
+      );
+    }
     return newUser;
   }
 
@@ -42,24 +78,32 @@ export class UserService {
     limit: number,
     page: number,
   ) {
-    const isAuth = this.authService.isAuth();
-    console.log(isAuth);
-    return [
+    throw new HttpException(
+      { error: 'The API does not exist' },
+      HttpStatus.MOVED_PERMANENTLY,
       {
-        firstName: 'John',
-        email: 'john@doe.com',
+        description: 'Occured because the API endpoint permanently moved',
       },
-      {
-        firstName: 'Alice',
-        email: 'alice@doe.com',
-      },
-    ];
+    );
   }
 
   /**
    * Find a single user using the ID of the user
    */
   public async findOneById(id: number) {
-    return await this.userRepository.findOneBy({ id });
+    let user = null as User | null;
+    try {
+      user = await this.userRepository.findOneBy({ id });
+    } catch (error) {
+      throw new RequestTimeoutException(
+        'Unable to process your request at the moment please try again',
+        { description: 'Error connencting to the database' },
+      );
+    }
+    // Handle the user does not exist
+    if (!user) {
+      throw new BadRequestException('The user id does not exist');
+    }
+    return user;
   }
 }

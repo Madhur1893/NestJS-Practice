@@ -1,4 +1,9 @@
-import { Body, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Injectable,
+  RequestTimeoutException,
+} from '@nestjs/common';
 import { UserService } from 'src/users/providers/user.service';
 import { CreatePostDto } from '../dtos/create-post.dto';
 import { Repository } from 'typeorm';
@@ -7,6 +12,7 @@ import { MetaOption } from 'src/meta-options/meta-option.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TagsService } from 'src/tags/providers/tags.service';
 import { PatchPostDto } from '../dtos/patch-post.dto';
+import { Tag } from 'src/tags/tag.entity';
 
 @Injectable()
 export class PostsService {
@@ -66,15 +72,36 @@ export class PostsService {
   }
 
   public async update(@Body() patchPostdto: PatchPostDto) {
+    let tags = undefined as Tag[] | undefined;
+    let post = null as Post | null;
     //Find the tag
-    const tags = await this.tagsService.findMultipleTags(
-      patchPostdto.tags ?? [],
-    );
+    try {
+      tags = await this.tagsService.findMultipleTags(patchPostdto.tags ?? []);
+    } catch (error) {
+      throw new RequestTimeoutException(
+        'Unable to process your request at the moment please try again',
+      );
+    }
+
+    /**
+     * Number of tags need to be equal
+     */
+    if (!tags || tags.length !== patchPostdto.tags?.length) {
+      throw new BadRequestException(
+        'Please check your tag Ids and ensure they are correct',
+      );
+    }
 
     //Find the post
-    const post = await this.postRepository.findOneBy({
-      id: patchPostdto.id,
-    });
+    try {
+      post = await this.postRepository.findOneBy({
+        id: patchPostdto.id,
+      });
+    } catch (error) {
+      throw new RequestTimeoutException(
+        'Unable to process your request at the moment please try again',
+      );
+    }
 
     //Update the properties
     if (post) {
@@ -89,10 +116,19 @@ export class PostsService {
 
       //Assign the new tags
       post.tags = tags;
+    } else {
+      throw new BadRequestException('The post ID does not exist');
     }
 
     //Save the post and return
-    if (post) return await this.postRepository.save(post);
+    try {
+      await this.postRepository.save(post);
+    } catch (error) {
+      throw new RequestTimeoutException(
+        'Unable to process your request at the moment please try again',
+      );
+    }
+    return post;
   }
 
   public async findAll(userId: string) {
