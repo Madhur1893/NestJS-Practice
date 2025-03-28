@@ -9,11 +9,12 @@ import {
 } from '@nestjs/common';
 import { GetUsersParamDto } from '../dtos/get-users-param.dto';
 import { AuthService } from 'src/auth/providers/auth.service';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { User } from '../user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from '../dtos/create-user.dto';
-import { error } from 'console';
+import { UsersCreateManyProvider } from './users-create-many.provider';
+import { CreateManyUsersDto } from '../dtos/create-many-users.dto';
 
 /**
  *  Class to connect to users table and perform buisness operation
@@ -28,6 +29,9 @@ export class UserService {
     //Injecting Auth Service
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
+
+    //Inject usersCreateManyProvider
+    private readonly usersCreateManyProvider: UsersCreateManyProvider,
   ) {}
 
   public async createUser(createUserDto: CreateUserDto) {
@@ -105,5 +109,9 @@ export class UserService {
       throw new BadRequestException('The user id does not exist');
     }
     return user;
+  }
+
+  public async createMany(createManyUsersDto: CreateManyUsersDto) {
+    return await this.usersCreateManyProvider.createMany(createManyUsersDto);
   }
 }
