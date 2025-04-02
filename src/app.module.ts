@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TagsModule } from './tags/tags.module';
 import { MetaOptionsModule } from './meta-options/meta-options.module';
+import { ConfigModule } from '@nestjs/config';
 
 // Users Module import
 
@@ -15,6 +16,10 @@ import { MetaOptionsModule } from './meta-options/meta-options.module';
     UsersModule,
     PostsModule,
     AuthModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env.development'],
+    }),
     TypeOrmModule.forRootAsync({
       imports: [],
       inject: [],
