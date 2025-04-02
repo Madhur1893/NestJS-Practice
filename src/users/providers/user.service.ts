@@ -9,12 +9,15 @@ import {
 } from '@nestjs/common';
 import { GetUsersParamDto } from '../dtos/get-users-param.dto';
 import { AuthService } from 'src/auth/providers/auth.service';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from '../dtos/create-user.dto';
+import { ConfigService } from '@nestjs/config';
 import { UsersCreateManyProvider } from './users-create-many.provider';
 import { CreateManyUsersDto } from '../dtos/create-many-users.dto';
+import { CreateUserProvider } from './create-user.provider';
+import { FindOneUserByEmailProvider } from './find-one-user-by-email.provider';
 
 /**
  *  Class to connect to users table and perform buisness operation
@@ -26,52 +29,25 @@ export class UserService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
 
+    //Injecting ConfigService
+    private readonly configService: ConfigService,
+
     //Injecting Auth Service
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
 
     //Inject usersCreateManyProvider
     private readonly usersCreateManyProvider: UsersCreateManyProvider,
+
+    //Inject createUserProvider
+    private readonly createUserProvider: CreateUserProvider,
+
+    //Injecting findOneByEmailProvider
+    private readonly findOneByEmailProvider: FindOneUserByEmailProvider,
   ) {}
 
   public async createUser(createUserDto: CreateUserDto) {
-    let existingUser = null as User | null;
-
-    try {
-      //Check if user exist with same email
-
-      existingUser = await this.userRepository.findOne({
-        where: { email: createUserDto.email },
-      });
-      console.log('existingUser', existingUser);
-    } catch (error) {
-      //Might save the details of exception
-      // Information which is sensitive
-      throw new RequestTimeoutException(
-        'Unable to process your request at the moment please try again',
-        { description: 'Error connencting to the database' },
-      );
-    }
-
-    //Handling exception
-
-    if (existingUser) {
-      throw new BadRequestException(
-        'The user already exist, please check you email',
-      );
-    }
-    //create a new user
-    let newUser = this.userRepository.create(createUserDto);
-
-    try {
-      newUser = await this.userRepository.save(newUser);
-    } catch (error) {
-      throw new RequestTimeoutException(
-        'Unable to process your request at the moment please try again',
-        { description: 'Error connencting to the database' },
-      );
-    }
-    return newUser;
+    return this.createUserProvider.createUser(createUserDto);
   }
 
   /**
@@ -82,6 +58,9 @@ export class UserService {
     limit: number,
     page: number,
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const environment = this.configService.get('S3_BUCKET');
+    console.log(environment);
     throw new HttpException(
       { error: 'The API does not exist' },
       HttpStatus.MOVED_PERMANENTLY,
@@ -113,5 +92,9 @@ export class UserService {
 
   public async createMany(createManyUsersDto: CreateManyUsersDto) {
     return await this.usersCreateManyProvider.createMany(createManyUsersDto);
+  }
+
+  public async findOneByEmail(email: string) {
+    return await this.findOneByEmailProvider.findOneByEmail(email);
   }
 }
