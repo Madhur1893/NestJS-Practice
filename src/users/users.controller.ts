@@ -8,6 +8,7 @@ import {
   Body,
   ParseIntPipe,
   DefaultValuePipe,
+  // SetMetadata,
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { GetUsersParamDto } from './dtos/get-users-param.dto';
@@ -21,6 +22,8 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { CreateManyUsersDto } from './dtos/create-many-users.dto';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { AuthType } from 'src/auth/enums/auth-type.enum';
 
 @Controller('users')
 @ApiTags('users')
@@ -61,6 +64,8 @@ export class UsersController {
   }
 
   @Post()
+  // @SetMetadata('authType', 'none')
+  @Auth(AuthType.None)
   public createUsers(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto);
   }
