@@ -35,7 +35,6 @@ export class CreateUserProvider {
       existingUser = await this.userRepository.findOne({
         where: { email: createUserDto.email },
       });
-      console.log('existingUser', existingUser);
     } catch (error) {
       //Might save the details of exception
       // Information which is sensitive
