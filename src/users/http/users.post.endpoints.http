@@ -1,5 +1,6 @@
 POST http://localhost:3000/users
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjI2LCJlbWFpbCI6ImpvZUBtZXNzeTIuY29tIiwiaWF0IjoxNzQ0MDA1OTgxLCJleHAiOjE3NDQwMDk1ODEsImF1ZCI6ImxvY2FsaG9zdDozMDAwIiwiaXNzIjoibG9jYWxob3N0OjMwMDAifQ.ZOzwftnGLDMSbAfh2fG58_7_tEmdIbVtLKS0qZIHJSQ
 
 {
     "firstName": "Joe2",

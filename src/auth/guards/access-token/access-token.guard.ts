@@ -25,6 +25,7 @@ export class AccessTokenGuard implements CanActivate {
     // Extract the request from the execution context
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const request = context.switchToHttp().getRequest();
+
     // Extract the token from the header
     const token = this.extractRequestFromHeader(request);
     // Validate the token
@@ -39,7 +40,7 @@ export class AccessTokenGuard implements CanActivate {
       );
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       request[REQUEST_USER_KEY] = payload;
-      console.log(payload);
+      console.log('payload', payload);
     } catch {
       throw new UnauthorizedException();
     }
